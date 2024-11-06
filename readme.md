@@ -22,10 +22,55 @@ If you are relying on visual studio, it can be difficult to use from the command
 
 # Part 1: Look at someone else's CMAKE:
 
-In this part of the workshop, we will use cmake to configure blender before compiling from scratch.
+In this part of the workshop, we will use cmake to configure blender, a 3d modeling tool, so that it can be compiled from scratch.
 
-git clone https://projects.blender.org/blender/blender.git
+First, to contain all of this work in one folder, we are going to create a folder called blender-git
 
+    mkdir blender-git
+    cd blender-git
+
+Then, once inside the folder, clone the repository.
+
+    git clone https://projects.blender.org/blender/blender.git
+
+the first thing to look at is the level of complexity in this file. One of the main purpose of CMAKE is to make sure all the "ingredients" are present before you start to compile. Most of this code is doing that.
+
+    # Test Compiler Support
+    #
+    # Keep in sync with: https://developer.blender.org/docs/handbook/building_blender/
+
+    if(CMAKE_COMPILER_IS_GNUCC)
+    if("${CMAKE_C_COMPILER_VERSION}" VERSION_LESS "11.0.0")
+        message(FATAL_ERROR "\
+    The minimum supported version of GCC is 11.0.0, found C compiler: ${CMAKE_C_COMPILER_VERSION}"
+        )
+
+The other parts change how the program will be compiled, affecting how it is used. 
+
+    #-----------------------------------------------------------------------------
+    # Declare Options
+    option(WITH_CYCLES "Enable Cycles Render Engine" ON)
+    option(WITH_CYCLES_OSL "Build Cycles with OpenShadingLanguage support" ON)
+    option(WITH_CYCLES_PATH_GUIDING "Build Cycles with path guiding support" ON)
+    option(WITH_CYCLES_EMBREE "Build Cycles with Embree support" ON)
+    option(WITH_CYCLES_LOGGING "Build Cycles with logging support" ON)
+    option(WITH_CYCLES_DEBUG "Build Cycles with options useful for debugging (e.g., MIS)" OFF)
+
+    option(WITH_PYTHON "Enable Embedded Python API (only disable for development)" ON)
+    option(WITH_PYTHON_SECURITY "Disables execution of scripts within blend files by default" ON)
+
+One of the really interesting configuration options is to compile blender as a python module instead of a stand-alone application. This change in compilation is controlled by CMAKE. 
+
+Here are the most [basic instructions](https://developer.blender.org/docs/handbook/building_blender/linux/) for compiling blender on your own. In this, you will see towards the bottom a link to [build options](https://developer.blender.org/docs/handbook/building_blender/options/)
+
+    cmake ../build_<platform> \
+        -DCMAKE_INSTALL_PREFIX=/opt/blender \
+        -DWITH_INSTALL_PORTABLE=OFF \
+        -DWITH_BUILDINFO=OFF
+
+compiling as a python module requires many settings to be changed, so instead of setting them all yourself, they provide a custom configuration file
+
+    cmake -C ../blender/build_files/cmake/config/bpy_module.cmake ../blender
 
 # Part 2: Life without CMAKE
 ### compile a simple program
@@ -36,7 +81,9 @@ $$
 \left[\begin{array}{c c c}
     1 &2 &3
 \end{array}\right]*\left[\begin{array}{c}
-    2\\4\\6
+    2\\
+    4\\
+    6
 \end{array}\right]=28
 $$
 
@@ -57,6 +104,7 @@ Then, we can fill in the values for our vectors
     }
 
 Next, we can write a function to compute a dot product:
+
     double dot_prod(double* v1, double* v2, int length){
         double sum = 0;
         for (int i=0;i<length;i++){
@@ -66,6 +114,7 @@ Next, we can write a function to compute a dot product:
     }
 
 Finally, we can return the output so we know its working:
+
     #include <iostream>
     std::cout << result <<std::endl;
 
@@ -121,7 +170,7 @@ You will likely need to incorporate an external library into your project at som
 
 Instead of using the BLAS library, we will turn our function script into a library. In a new folder called `library`, copy all the scripts from our previous folder. First, we will need to make an "object" file from our function script
 
-    g++ -c ./library/dot_prod.cpp -0 ./library/dot_prod
+    g++ -c ./library/dot_prod.cpp -o ./library/dot_prod
 
 Then, we can turn this object file into a library using ar
 
@@ -131,7 +180,7 @@ usually, you would put many object files into a library. To compile our main fun
 
     g++ ./library/fun_math_lib.cpp -L./library/ -l:dot_prod.a -o fun_math
 
-Typically in project, you'll want to use many libraries, so we need a good way to keep track of them and our supporting scripts. This brings us to CMAKE
+Typically in project, you'll want to use many libraries, so we need a good way to keep track of them and our supporting scripts. Even more important, others who want to compile your library or program will need a good way of keeping track of them. This brings us to CMAKE
 # Part 3: Introducing CMAKE
 ### Just the basics
 To start using cmake, we will go back to our simple folder and begin with the basics. cmake is driven from instructions located in `CMakeLists.txt` files. First, we will create one of these files in our `simple` folder. There are three main items needed in this file, as shown below:
