@@ -124,7 +124,7 @@ This can be simply compiled from the root directory:
 
 Now we can run it
 
-    ./simple/fun_math.exe
+    fun_math.exe
 ### Put function in separate file
 The previous example works well for when the program is simple, but when there are multiple functions, it is better to split them into multiple scripts. We will do this for our dot product function. In a folder named `external_func`, create a file called `dot_prod.cpp`, then copy the function into it. our old `main` function into a new file as well in this folder. We can name it `fun_math_lib.cpp`. `fun_math_lib.cpp` should look like this
 
@@ -170,7 +170,7 @@ You will likely need to incorporate an external library into your project at som
 
 Instead of using the BLAS library, we will turn our function script into a library. In a new folder called `library`, copy all the scripts from our previous folder. First, we will need to make an "object" file from our function script
 
-    g++ -c ./library/dot_prod.cpp -o ./library/dot_prod
+    g++ -c ./library/dot_prod.cpp -o ./library/dot_prod.o
 
 Then, we can turn this object file into a library using ar
 
@@ -254,7 +254,7 @@ remove these lines
     add_library(dot_prod dot_prod.cpp)
     target_link_libraries(fun_math PUBLIC dot_prod)
 
-Now, instead of creating a library then adding it to the library, we are just simply adding one that has already been created. There is a [catch](https://stackoverflow.com/a/66516012) to this though. The compiler we used to create the library likely has to be the same compiler used by cmake or else the linking will fail. Now, I will get to show you what it looks like to use makefiles as the build system instead of visual studio's system. First, clean out the build folder like last time. If you have mingw64 gnu compilers, you can type:
+Now, instead of creating a library then adding it to the project, we are just simply adding one that has already been created. There is a [catch](https://stackoverflow.com/a/66516012) to this though. The compiler we used to create the library likely has to be the same compiler used by cmake or else the linking will fail. Now, I will get to show you what it looks like to use makefiles as the build system instead of visual studio's system. First, clean out the build folder like last time. If you have mingw64 gnu compilers, you can type:
 
     cmake -G "MinGW Makefiles" ..\library
 
